@@ -67,6 +67,20 @@ let creationTests =
       |> When (RequestTimeOff request)
       |> Then (Ok [RequestCreated request]) "The request should have been created"
     }
+
+    // Un employé peut uniquement effectuer des demandes qui commencent à une date future (au moins le lendemain de la date à laquelle la demande est effectuée)
+    test "Request can only be starting today or after" {
+       let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        
+      Given [ RequestCreated request ]
+      |> ConnectedAs (Employee "jdoe")
+      |> When (RequestTimeOff request)
+      |> Then (Ok [RequestCreated request]) "The request should have been created"
+    }
   ]
 
 [<Tests>]
@@ -101,4 +115,17 @@ let askCacellationTests =
       |> When (AskRequestCacellation ("jdoe", request.RequestId))
       |> Then (Ok [RequestCancellationAsked request]) "The request should have been saved"
     }
+
+    // test "Cancelling another's employee's request" {
+    //   let request = {
+    //     UserId = "jdoe"
+    //     RequestId = Guid.NewGuid()
+    //     Start = { Date = DateTime(2019, 10, 14); HalfDay = AM }
+    //     End = { Date = DateTime(2019, 10, 14); HalfDay = PM } }
+
+    //   Given [ RequestCreated request ]
+    //   |> ConnectedAs (Employee "toto")
+    //   |> When (AskRequestCacellation ("jdoe", request.RequestId))
+    //   |> Then (Error [RequestCancellationAsked request]) "The can't be deleted by another Employee"
+    // }
   ]
