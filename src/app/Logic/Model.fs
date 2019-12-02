@@ -7,24 +7,28 @@ type Command =
     | RequestTimeOff of TimeOffRequest
     | AskRequestCacellation of UserId * Guid
     | ValidateRequest of UserId * Guid
+    | RefusedRequestCancellation of UserId * Guid
     with
     member this.UserId =
         match this with
         | RequestTimeOff request -> request.UserId
         | AskRequestCacellation (userId, _) -> userId
         | ValidateRequest (userId, _) -> userId
+        | RefusedRequestCancellation (userId, _) -> userId
 
 // And our events
 type RequestEvent =
     | RequestCreated of TimeOffRequest
     | RequestCancellationAsked of TimeOffRequest
     | RequestValidated of TimeOffRequest
+    | RequestRefusalCancellation of TimeOffRequest
     with
     member this.Request =
         match this with
         | RequestCreated request -> request
         | RequestCancellationAsked request -> request
         | RequestValidated request -> request
+        | RequestRefusalCancellation request -> request
 
 // We then define the state of the system,
 // and our 2 main functions `decide` and `evolve`
@@ -34,18 +38,21 @@ module Logic =
         | NotCreated
         | PendingValidation of TimeOffRequest
         | PendingCancellation of TimeOffRequest
+        | CancellationRefused of TimeOffRequest
         | Validated of TimeOffRequest with
         member this.Request =
             match this with
             | NotCreated -> invalidOp "Not created"
             | PendingValidation request
             | PendingCancellation request
+            | CancellationRefused request
             | Validated request -> request
         member this.IsActive =
             match this with
             | NotCreated -> false
             | PendingValidation _
             | PendingCancellation _
+            | CancellationRefused _
             | Validated _ -> true
 
     type UserRequestsState = Map<Guid, RequestState>
@@ -55,6 +62,7 @@ module Logic =
         | RequestCreated request -> PendingValidation request
         | RequestCancellationAsked request -> PendingCancellation request
         | RequestValidated request -> Validated request
+        | RequestRefusalCancellation request -> CancellationRefused request
 
     let evolveUserRequests (userRequests: UserRequestsState) (event: RequestEvent) =
         let requestState = defaultArg (Map.tryFind event.Request.RequestId userRequests) NotCreated
@@ -119,3 +127,9 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     validateRequest requestState
+            | RefusedRequestCancellation (_, requestId) ->
+                if user <> Manager then
+                    Error "Unauthorized"
+                else
+                    let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
+                    Ok [ RequestRefusalCancellation requestState.Request]

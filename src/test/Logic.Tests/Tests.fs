@@ -102,3 +102,20 @@ let askCacellationTests =
       |> Then (Ok [RequestCancellationAsked request]) "The request should have been saved"
     }
   ]
+
+[<Tests>]
+let cacellationRefused =
+  testList "Refused cancellation tests" [
+    test "A cancellation is refused" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+
+      Given [ RequestCreated request ]
+      |> ConnectedAs Manager
+      |> When (RefusedRequestCancellation ("jdoe", request.RequestId))
+      |> Then (Ok [RequestRefusalCancellation request]) "The request should have refused cancellation"
+    }
+  ]
