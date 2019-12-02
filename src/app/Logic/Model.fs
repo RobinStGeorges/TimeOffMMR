@@ -34,6 +34,8 @@ type RequestEvent =
 // and our 2 main functions `decide` and `evolve`
 module Logic =
 
+    let today = DateTime.Today;
+
     type RequestState =
         | NotCreated
         | PendingValidation of TimeOffRequest
@@ -84,11 +86,10 @@ module Logic =
     let overlapsWithAnyRequest (otherRequests: TimeOffRequest seq) request =
         false //TODO: write this function using overlapsWith
 
-    let createRequest activeUserRequests  request =
+    let createRequest activeUserRequests request today =
         if request |> overlapsWithAnyRequest activeUserRequests then
             Error "Overlapping request"
-        // This DateTime.Today must go away!
-        elif request.Start.Date <= DateTime.Today then
+        elif request.Start.Date <= today then
             Error "The request starts in the past"
         else
             Ok [RequestCreated request]
@@ -115,7 +116,7 @@ module Logic =
                     |> Seq.where (fun state -> state.IsActive)
                     |> Seq.map (fun state -> state.Request)
 
-                createRequest activeUserRequests request
+                createRequest activeUserRequests request today
 
             | AskRequestCacellation (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
