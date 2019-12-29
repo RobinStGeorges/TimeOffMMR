@@ -59,8 +59,8 @@ let creationTests =
       let request = {
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
-        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        Start = { Date = DateTime(2020, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2020, 12, 27); HalfDay = PM } }
 
       Given [ ]
       |> ConnectedAs (Employee "jdoe")
@@ -73,8 +73,8 @@ let creationTests =
        let request = {
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
-        Start = { Date = DateTime(2019, 12, 27); HalfDay = AM }
-        End = { Date = DateTime(2019, 12, 27); HalfDay = PM } }
+        Start = { Date = DateTime(2020, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2020, 12, 27); HalfDay = PM } }
         
       Given [ RequestCreated request ]
       |> ConnectedAs (Employee "jdoe")
@@ -131,6 +131,23 @@ let cacellationRefused =
       |> ConnectedAs Manager
       |> When (RefusedRequestCancellation ("jdoe", request.RequestId))
       |> Then (Ok [RequestRefusalCancellation request]) "The request should have refused cancellation"
+    }
+  ]
+
+[<Tests>]
+let cancellationTests =
+  testList "Cancellation tests" [
+    test "A request is cancelled" {
+      let request = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 12, 27); HalfDay = AM }
+        End = { Date = DateTime(2020, 12, 28); HalfDay = PM } }
+
+      Given [ RequestCreated request ]
+      |> ConnectedAs Manager
+      |> When (CancelRequest ("jdoe", request.RequestId))
+      |> Then (Ok [RequestCancelled request]) "The request should have been cancelled"
     }
   ]
 
