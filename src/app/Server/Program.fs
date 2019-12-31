@@ -87,7 +87,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                         ]
                     ))
             ])
-        setStatusCode 404 >=> text "Not Found" ]
+        setStatusCode 404 >=> text "TimeOffMMR : Page Not Found" ]
 
 // ---------------------------------
 // Error handler
