@@ -80,14 +80,19 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
             (choose [
                 route "/users/login" >=> POST >=> Auth.Handlers.login
                 subRoute "/timeoff"
-                    (Auth.Handlers.requiresJwtTokenForAPI (fun user ->
-                        choose [
-                            POST >=> route "/request" >=> HttpHandlers.requestTimeOff (handleCommand user)
-                            POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
-                        ]
-                    ))
+                    (choose [
+                        route "/test" >=> setStatusCode 200 >=> text "Coucou Marion !"
+                        (Auth.Handlers.requiresJwtTokenForAPI (fun user ->
+                            choose [
+                                POST >=> route "/request" >=> HttpHandlers.requestTimeOff (handleCommand user)
+                                POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
+                            ]
+                        ))
+                    ])
             ])
-        setStatusCode 404 >=> text "TimeOffMMR : Page Not Found" ]
+        route "/test2" >=> setStatusCode 200 >=> text "Coucou Marion 2 !"
+        setStatusCode 404 >=> text "TimeOffMMR : Page Not Found" 
+        ]
 
 // ---------------------------------
 // Error handler
