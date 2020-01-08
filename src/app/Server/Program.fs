@@ -53,6 +53,19 @@ module HttpHandlers =
                     return! (BAD_REQUEST message) next ctx
             }
 
+    let cancelRequest (handleCommand: Command -> Result<RequestEvent list, string>) =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            task {
+                let userAndRequestId = ctx.BindQueryString<UserAndRequestId>()
+                let command = CancelRequest (userAndRequestId.UserId, userAndRequestId.RequestId)
+                let result = handleCommand command
+                match result with
+                | Ok [RequestCancelled timeOffRequest] -> return! json timeOffRequest next ctx
+                | Ok _ -> return! Successful.NO_CONTENT next ctx
+                | Error message ->
+                    return! (BAD_REQUEST message) next ctx
+            }
+
 // ---------------------------------
 // Web app
 // ---------------------------------
@@ -86,6 +99,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                             choose [
                                 POST >=> route "/request" >=> HttpHandlers.requestTimeOff (handleCommand user)
                                 POST >=> route "/validate-request" >=> HttpHandlers.validateRequest (handleCommand user)
+                                POST >=> route "/cancel-request" >=> HttpHandlers.cancelRequest (handleCommand user)
                             ]
                         ))
                     ])
