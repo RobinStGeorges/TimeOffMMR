@@ -33,22 +33,126 @@ let overlapTests =
       Expect.isTrue (Logic.overlapsWith request request) "A request should overlap with istself"
     }
 
-    test "Requests on 2 distinct days don't overlap" {
+    test "Requests on 2 distinct days don't overlap (1)" {
       let request1 = {
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
-        Start = { Date = DateTime(2019, 10, 1); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 1); HalfDay = PM }
+        Start = { Date = DateTime(2020, 5, 1); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 3); HalfDay = PM }
       }
 
       let request2 = {
         UserId = "jdoe"
         RequestId = Guid.NewGuid()
-        Start = { Date = DateTime(2019, 10, 2); HalfDay = AM }
-        End = { Date = DateTime(2019, 10, 2); HalfDay = PM }
+        Start = { Date = DateTime(2020, 5, 6); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 8); HalfDay = PM }
       }
 
       Expect.isFalse (Logic.overlapsWith request1 request2) "The requests don't overlap"
+    }
+
+    test "Requests on 2 not distinct days overlap (1)" {
+      let request1 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 1); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 3); HalfDay = PM }
+      }
+
+      let request2 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 2); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 5); HalfDay = PM }
+      }
+
+      Expect.isTrue (Logic.overlapsWith request1 request2) "The requests should overlap"
+    }
+
+    test "Requests on 2 not distinct days overlap (2)" {
+      let request1 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 1); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 3); HalfDay = PM }
+      }
+
+      let request2 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 2); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 5); HalfDay = PM }
+      }
+
+      Expect.isTrue (Logic.overlapsWith request2 request1) "The requests should overlap"
+    }
+
+    test "Requests on 2 not distinct days overlap (3)" {
+      let request1 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 1); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 3); HalfDay = PM }
+      }
+
+      let request2 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 5); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 8); HalfDay = PM }
+      }
+
+      let request3 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 10); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 13); HalfDay = PM }
+      }
+
+      let request4 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 2); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 4); HalfDay = PM }
+      }
+
+      let seq1 = [| request1; request2; request3 |] |> Seq.ofArray
+
+      Expect.isTrue (Logic.overlapsWithAnyRequest seq1 request4) "The requests should overlap"
+    }
+
+    test "Requests on 2 distinct days don't overlap (2)" {
+      let request1 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 1); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 3); HalfDay = PM }
+      }
+
+      let request2 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 5); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 8); HalfDay = PM }
+      }
+
+      let request3 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 10); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 13); HalfDay = PM }
+      }
+
+      let request4 = {
+        UserId = "jdoe"
+        RequestId = Guid.NewGuid()
+        Start = { Date = DateTime(2020, 5, 15); HalfDay = AM }
+        End = { Date = DateTime(2020, 5, 18); HalfDay = PM }
+      }
+
+      let seq1 = [| request1; request2; request3 |] |> Seq.ofArray
+
+      Expect.isFalse (Logic.overlapsWithAnyRequest seq1 request4) "The requests shouldn't overlap"
     }
   ]
 
